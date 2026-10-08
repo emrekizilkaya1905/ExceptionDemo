@@ -20,11 +20,16 @@ namespace ExceptionDemo
             }
             catch (FormatException ex)
             {
-                Console.WriteLine($"Format error: {ex.Message}");
+                Console.WriteLine($"Format error in ProcessFile: {ex.Message}");
             }
             catch (DivideByZeroException ex)
             {
                 Console.WriteLine($"Cannot divide by zero: {ex.Message}");
+            }
+            // Handle numbers outside the int range with a specific error message.
+            catch (OverflowException ex)
+            {
+                Console.WriteLine($"The number is outside the allowed int range: {ex.Message}");
             }
             catch (Exception ex)
             {
@@ -45,6 +50,7 @@ namespace ExceptionDemo
                 throw new ArgumentException("The file name must not be empty or null.", nameof(fileName));
             }
 
+            // Removed the general catch so exceptions keep their original types and reach the matching catch blocks in Main.
             StreamReader? reader = null;
             try
             {
@@ -56,23 +62,27 @@ namespace ExceptionDemo
 
                 int number = int.Parse(line);
 
+                // Double division by zero returns Infinity, so throw explicitly to let Main catch DivideByZeroException.
+                if (number == 0)
+                {
+                    throw new DivideByZeroException("The number in the file cannot be zero.");
+                }
+
                 return 100.0 / number;
             }
-            catch (FormatException ex)
+            //Delete unnecessary message. I did not delete whole catch block because it is the part of the exercise to show how to rethrow an exception.
+            catch (FormatException)
             {
-                Console.WriteLine($"Format error in ProcessFile: {ex.Message}");
                 throw;
-            }
-            catch (Exception ex)
-            {
-                throw new InvalidOperationException(
-                "The file could not be processed.",
-                ex);
             }
             finally
             {
-                reader?.Close();
-                Console.WriteLine("finally in ProcessFile: StreamReader closed.");
+                // Close the reader only if it was successfully created.
+                if (reader != null)
+                {
+                    reader.Close();
+                    Console.WriteLine("finally in ProcessFile: StreamReader closed.");
+                }
             }
         }
     }
